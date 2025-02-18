@@ -1,0 +1,17 @@
+name: command
+description: "A new Flutter package project."
+version: 1.0.0+1
+homepage: https://github.com/TercyoStorck/command
+
+environment:
+  sdk: ^3.5.4
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
