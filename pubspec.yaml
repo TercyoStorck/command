@@ -1,5 +1,5 @@
 name: command
-description: "A new Flutter package project."
+description: "Package to create commands for command pattern"
 version: 1.0.0
 homepage: https://github.com/TercyoStorck/command
 
