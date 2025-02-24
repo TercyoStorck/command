@@ -15,10 +15,12 @@ abstract class Command<T> with Stream<T> implements ValueListenable<T> {
   StreamController<T>? _strreamController;
   CommandState _state = CommandState.created;
   ErrorWrapper? _errorWrapper;
+  ValueCallback<T>? _onCompleted;
+  ErrorCallback? _onError;
 
   Command([T? value]) : _value = value as T;
 
-  static Command<T> crerate<T>({
+  static Command<T> create<T>({
     T? value,
     required Future<T> Function(T? value) action,
   }) {
@@ -33,7 +35,8 @@ abstract class Command<T> with Stream<T> implements ValueListenable<T> {
   CommandState get state => _state;
   ErrorWrapper? get errorWrapper => _errorWrapper;
 
-  Future<T> action(T? currentValue);
+  Future<T> action(T currentValue);
+  void validate(T currentValue);
 
   void _notifyListeners() {
     if (_state == CommandState.error) {
@@ -41,24 +44,49 @@ abstract class Command<T> with Stream<T> implements ValueListenable<T> {
         _errorWrapper!.error,
         _errorWrapper?.stackTrace,
       );
+
+      _onError?.call(_errorWrapper!);
+    } else {
+      _strreamController?.add(_value);
     }
 
-    _strreamController?.add(_value);
+    if (_state == CommandState.completed) {
+      _onCompleted?.call(_value);
+    }
 
     for (var listener in _listeners) {
       listener?.call();
     }
   }
 
-  void execute() async {
-    this.executeAsync();
+  void execute({
+    ValueCallback<T>? onCompleted,
+    ErrorCallback? onError,
+  }) {
+    _onCompleted = onCompleted;
+    _onError = onError;
+
+    this.executeAsync().whenComplete(
+      () {
+        _onCompleted = null;
+        _onError = null;
+      },
+    );
   }
 
   Future<T> executeAsync() async {
+    if (_state == CommandState.running) {
+      return _value;
+    }
+
     _state = CommandState.running;
+    _errorWrapper = null;
+    _notifyListeners();
 
     try {
-      final rersult = await action(_value);
+      this.validate(_value);
+
+      final rersult = await this.action(_value);
 
       _value = rersult;
       _state = CommandState.completed;
@@ -93,14 +121,12 @@ abstract class Command<T> with Stream<T> implements ValueListenable<T> {
   }) {
     _strreamController ??= StreamController<T>.broadcast();
 
-    if (_value != null) {
-      Future.delayed(
-        const Duration(milliseconds: 100),
-        () {
-          _strreamController?.add(_value);
-        },
-      );
-    }
+    Future.delayed(
+      const Duration(milliseconds: 100),
+      () {
+        _strreamController?.add(_value);
+      },
+    );
 
     return _strreamController!.stream.listen(
       onData,
@@ -123,12 +149,21 @@ abstract class Command<T> with Stream<T> implements ValueListenable<T> {
 
 class _Command<T> extends Command<T> {
   final Future<T> Function(T? value) _action;
+  final VoidCallback? _validate;
 
   _Command(
     super.value, {
     required Future<T> Function(T? value) action,
-  }) : _action = action;
+    VoidCallback? validate,
+  })  : _action = action,
+        _validate = validate;
+
+  @override
+  void validate(T? currentValue) => _validate?.call();
 
   @override
   Future<T> action(T? value) async => await _action(value);
 }
+
+typedef ValueCallback<T> = void Function(T value);
+typedef ErrorCallback = void Function(ErrorWrapper error);

@@ -1,0 +1,3 @@
+- Criar objeto reativo de stream e listenable;
+- Criar Receiver;
+- Verificar "combine", passando mesmo receiver para vários commands

@@ -1,6 +1,6 @@
-name: command
+name: dart_command
 description: "Package to create commands for command pattern"
-version: 1.0.0
+version: 1.1.0
 homepage: https://github.com/TercyoStorck/command
 
 environment:

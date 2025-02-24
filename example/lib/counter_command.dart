@@ -4,12 +4,15 @@ class CounterCommand extends Command<int> {
   CounterCommand(super.value);
 
   @override
-  Future<int> action(currentValue) async {
-    if (currentValue == null) {
-      return 0;
+  void validate(int currentValue) {
+    if (currentValue >= 10) {
+      throw 'Value can\'t be more than 10';
     }
+  }
 
-    final incrrementedValue = currentValue + 1;
-    return incrrementedValue;
+  @override
+  Future<int> action(currentValue) async {
+    final incrementedValue = currentValue + 1;
+    return incrementedValue;
   }
 }

@@ -35,7 +35,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final _counterCommand = CounterCommand(0);
-  final _randomNumberCommand = Command.crerate(
+  final _randomNumberCommand = Command.create(
     value: 0,
     action: (_) async {
       return Random().nextInt(100);
@@ -72,7 +72,20 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
             ElevatedButton(
-              onPressed: _counterCommand.execute,
+              onPressed: () {
+                _counterCommand.execute(
+                  onCompleted: (value) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Counter: $value')),
+                    );
+                  },
+                  onError: (error) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: ${error.error}')),
+                    );
+                  },
+                );
+              },
               child: const Text("Incrrement"),
             ),
             const SizedBox(height: 20),
